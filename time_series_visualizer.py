@@ -39,55 +39,44 @@ def draw_line_plot():
     return fig
 
 
-def draw_bar_plot():
+'''def draw_bar_plot():
     # Copy and modify data for monthly bar plot
 
     # df["month"] = df["date"].dt.month
     # df["monthly_average"] = df["date"].dt.month
 
+    df["date"] = pd.to_datetime(df["date"])
+    df["month"] = df["date"].dt.month_name()
     df["year"] = df["date"].dt.year
-    df["month"] = df["date"].dt.month
-    print(df.head())
-    """df_melted_year = pd.melt(
-        df,
-        id_vars=["year"],
-        value_vars=["value"],  # Specify the column(s) to melt
-        var_name="variable",  # Name for the 'variable' column in the melted DataFrame
-        value_name="value_melted",  # Use a different name that doesn't conflict
-    )"""
 
-    df_2 = df.drop(columns="date")
-    df_melted = pd.melt(
-        df_2,
-        id_vars=["year", "month"],
-        value_name="values",
+    df_group = (
+        df.groupby(["year", "month"])
+        .agg({"value": "mean"})
+        .sort_values("month")
+        .reset_index()
     )
+
+    print(df)
+    print(df_group)
+
+    df_melted = pd.melt(df_group, id_vars=["year", "month"], value_name="average")
 
     print(df_melted)
 
-    df_melted_grouped = (
-        df_melted.groupby(["year", "month"])
-        .agg({"values": "mean"})
-        .reset_index()
-        .astype(int)
-    )
-    print(df_melted_grouped)
+    # plt.show()
 
-    # Draw bar plot
-    fig = plt.subplots(figsize=(10, 10))
-    plt.bar(data=df_melted_grouped, x="year", height="values")
-    plt.xlabel("Years")
-    plt.ylabel("Average Page Views")
-
-    plt.legend()
-    plt.show()
+    """years = df_group["year"]
+    months = df_group["month"]
+    monthly_average = df_group["value"]
+    plt.bar(years, monthly_average)
+    plt.show()"""
 
     # Save image and return fig (don't change this part)
     # fig.savefig("bar_plot.png")
-    return fig
+    # return fig
 
 
-draw_bar_plot()
+draw_bar_plot()'''
 
 
 def draw_box_plot():
