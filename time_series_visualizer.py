@@ -7,14 +7,12 @@ register_matplotlib_converters()
 
 # Import data (Make sure to parse dates. Consider setting index column to 'date'.)
 df = pd.read_csv("fcc-forum-pageviews.csv")
+df2 = df.copy()
 df = df.set_index("date").reset_index()
 
 df["date"] = pd.to_datetime(df["date"])
-print(df.head())
 
-
-# Clean data
-
+# lineplot
 df = df[
     (
         (df["value"] >= df["value"].quantile(0.025))
@@ -22,7 +20,48 @@ df = df[
     )
 ]
 
-print(df.count())
+# barplot
+df2 = df2[
+    (
+        (df2["value"] >= df2["value"].quantile(0.025))
+        & (df2["value"] <= df2["value"].quantile(0.975))
+    )
+]
+
+df2["date"] = pd.to_datetime(df2["date"])
+df2.set_index("date", inplace=True)
+
+# df2_resample = df2.resample("M").mean()
+# or
+df2_resample = df2.resample("ME").agg({"value": "mean"})
+
+# df2["months"] = df2.index.month_name()
+df2_resample["year"] = df2_resample.index.year
+df2_resample["month"] = df2_resample.index.month_name()
+
+df2_grouped = df2_resample.groupby(["year", "month"])["value"].sum().reset_index()
+months_order = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
+df2_grouped["month"] = pd.Categorical(
+    df2_grouped["month"], categories=months_order, ordered=True
+)
+
+pivot_df = df2_grouped.pivot(index="year", columns="month", values="value")
+
+
+# boxplot
 
 
 def draw_line_plot():
@@ -39,44 +78,21 @@ def draw_line_plot():
     return fig
 
 
-'''def draw_bar_plot():
-    # Copy and modify data for monthly bar plot
+def draw_bar_plot():
 
-    # df["month"] = df["date"].dt.month
-    # df["monthly_average"] = df["date"].dt.month
-
-    df["date"] = pd.to_datetime(df["date"])
-    df["month"] = df["date"].dt.month_name()
-    df["year"] = df["date"].dt.year
-
-    df_group = (
-        df.groupby(["year", "month"])
-        .agg({"value": "mean"})
-        .sort_values("month")
-        .reset_index()
-    )
-
-    print(df)
-    print(df_group)
-
-    df_melted = pd.melt(df_group, id_vars=["year", "month"], value_name="average")
-
-    print(df_melted)
-
-    # plt.show()
-
-    """years = df_group["year"]
-    months = df_group["month"]
-    monthly_average = df_group["value"]
-    plt.bar(years, monthly_average)
-    plt.show()"""
+    # Plot
+    fig, ax = plt.subplots(figsize=(12, 8))
+    pivot_df.plot(kind="bar", ax=ax)
+    ax.set_ylabel("Average Page Views")
+    ax.set_xlabel("Years")
+    ax.set_xticks(range(len(pivot_df.index)))
+    ax.set_xticklabels(pivot_df.index, rotation=90)
+    ax.legend(title="Months")
+    plt.tight_layout()
 
     # Save image and return fig (don't change this part)
-    # fig.savefig("bar_plot.png")
-    # return fig
-
-
-draw_bar_plot()'''
+    fig.savefig("bar_plot.png")
+    return fig
 
 
 def draw_box_plot():
