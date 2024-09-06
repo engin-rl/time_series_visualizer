@@ -98,12 +98,44 @@ def draw_bar_plot():
 def draw_box_plot():
     # Prepare data for box plots (this part is done!)
     df_box = df.copy()
-    df_box.reset_index(inplace=True)
     df_box["year"] = [d.year for d in df_box.date]
     df_box["month"] = [d.strftime("%b") for d in df_box.date]
+    df_box = df_box.reset_index().drop(columns=["index", "date"])
+    df_box_year = df_box[["year", "value"]]
+    df_box_month = df_box[["month", "value"]]
+    months_order_2 = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+    df_box_month["month"] = pd.Categorical(
+        df_box_month["month"], categories=months_order_2, ordered=True
+    )
+
+    print(df_box_month["month"])
 
     # Draw box plots (using Seaborn)
+    fig, ax = plt.subplots(1, 2, figsize=(24, 8))
+    sns.boxplot(x="year", y="value", data=df_box_year, ax=ax[0])
+    ax[0].set_ylabel("Page Views")
+    ax[0].set_xlabel("Year")
+    ax[0].set_title("Year-wise Box Plot (Trend)")
+
+    sns.boxplot(x="month", y="value", data=df_box_month, ax=ax[1])
+    ax[1].set_ylabel("Page Views")
+    ax[1].set_xlabel("Month")
+    ax[1].set_title("Month-wise Box Plot (Seasonality)")
 
     # Save image and return fig (don't change this part)
     fig.savefig("box_plot.png")
+    plt.show()
     return fig
